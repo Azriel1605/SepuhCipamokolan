@@ -2,7 +2,13 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# load_dotenv(dotenv_path="/var/www/Lansia/backend/.env")
+# folder tempat file Python ini berada
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+# path .env otomatis menyesuaikan OS
+dotenv_path = os.path.join(basedir, ".env")
+
+load_dotenv(dotenv_path)
 
 class Config:
     # Database
