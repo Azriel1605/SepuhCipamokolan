@@ -33,7 +33,7 @@ class Config:
     MAIL_DEFAULT_SENDER = 'keyapkeyop@gmail.com'
     
     # CORS
-    CORS_ORIGINS = [os.getenv("FRONTEND_URL", "http://lansia.cipamokolan.id")]
+    CORS_ORIGINS = [os.getenv("FRONTEND_URL")]
     CORS_SUPPORTS_CREDENTIALS = True
 
 class DevelopmentConfig(Config):
