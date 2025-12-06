@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { use } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import {
   pekerjaanOptions,
   penghasilanOptions,
 } from "@/lib/options"
+import { useAuth } from "@/hooks/use-auth"
 
 interface PersonalData {
   nama_lengkap: string
@@ -37,6 +38,11 @@ interface PersonalDataSectionProps {
 }
 
 const PersonalDataSection = React.memo(({ data, onChange }: PersonalDataSectionProps) => {
+
+  
+  const { user } = useAuth()
+  const isAllowEditRW = user?.role === "admin" || user?.role === "superadmin" || user?.role === "kelurahan"
+
   return (
     <Card>
       <CardHeader>
@@ -118,7 +124,7 @@ const PersonalDataSection = React.memo(({ data, onChange }: PersonalDataSectionP
           </div>
           <div>
             <Label htmlFor="rw">RW</Label>
-            <Input id="rw" value={data.rw} onChange={(e) => onChange("rw", e.target.value)} required/>
+            <Input id="rw" value={isAllowEditRW ? data.rw : user?.role} onChange={(e) => onChange("rw", e.target.value)} readOnly={!isAllowEditRW} required/> 
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

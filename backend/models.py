@@ -50,13 +50,11 @@ class Lansia(db.Model):
     
     def usia(self, reference=datetime.today().strftime('%Y-%m-%d')):
         try:
-            print(reference, "On MODEL LANSIA")
             reference = datetime.strptime(reference, '%Y-%m-%d').date()
             return reference.year - self.tanggal_lahir.year - (
                 (reference.month, reference.day) < (self.tanggal_lahir.month, self.tanggal_lahir.day)
             )
         except Exception as e:
-            print(e)
             return 404
         
     def kelompokUsiaReference(self, reference=datetime.today()):
@@ -135,7 +133,6 @@ class KeluargaPendamping(db.Model):
                 (reference.month, reference.day) < (self.tanggal_lahir_pendamping.month, self.tanggal_lahir_pendamping.day)
             )
         except Exception as e:
-            print(e, "pendamping")
             return '-'
 
 class ADailyLiving(db.Model):

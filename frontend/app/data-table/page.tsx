@@ -34,14 +34,15 @@ import {
   X,
 } from "lucide-react"
 import { dataAPI } from "@/lib/api"
-import {genderOptions, perkawinanOptions, agamaOptions, pendidikanOptions,kesehatanOptions, penyakitOptions,
+import {genderOptions, perkawinanOptions, agamaOptions, kesehatanOptions, penyakitOptions,
         obatOptions, alatBantuOptions, aktivitasOptions, giziOptions, imunisasiOptions,
         dukunganOptions, rumahOptions, kebutuhanMendesakOptions, hobiOptions,
         psikologisOptions, hubunganOptions, ketersediaanWaktuOptions,
         dataBKLOptions,
         riwayatBKLOptions,
-        keterlibatanDanaOptions, adlGetOptions} from "@/lib/options"
+        keterlibatanDanaOptions, adlGetOptions, bpjsOptions} from "@/lib/options"
 import RouteGuard from "@/components/route-guard"
+import { useAuth } from "@/hooks/use-auth"
 
 interface LansiaData {
   id: number
@@ -88,6 +89,9 @@ interface FilterOptions {
 }
 
 function DataTableContent() {
+  const { user } = useAuth()
+  const isAllowEditRW = user?.role === "admin" || user?.role === "superadmin" || user?.role === "kelurahan"
+
   const [data, setData] = useState<LansiaData[]>([])
   const [selectedLansia, setSelectedLansia] = useState<LansiaDetail | null>(null)
   const [editingLansia, setEditingLansia] = useState<LansiaDetail | null>(null)
@@ -116,6 +120,7 @@ function DataTableContent() {
   const [ageGroupFilter, setAgeGroupFilter] = useState("all")
   const [rwFilter, setRwFilter] = useState("all")
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedDateDownload, setSelectedDateDownload] = useState(new Date())
 
   // Sorting
   const [sortBy, setSortBy] = useState("nama_lengkap")
@@ -442,6 +447,19 @@ function DataTableContent() {
           </Alert>
         )}
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Download Excel</CardTitle>
+            <CardDescription>Data yang tertera akan disimpan dalam file excel</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap justify-content-end gap-2">
+                  <DatePicker date={selectedDateDownload} onChange={(date: Date) => setSelectedDateDownload(date)} />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <br />
         <Card>
           <CardHeader>
             <CardTitle>Daftar Lansia</CardTitle>
@@ -972,12 +990,8 @@ function DataTableContent() {
                 </TabsContent>
 
                 <TabsContent value="family" className="space-y-4">
-                  {selectedLansia.keluarga ? (
+                  {selectedLansia.keluarga.memiliki_pendamping ? (
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="font-semibold">Memiliki Pendamping</Label>
-                        <p className="text-sm text-gray-600">{selectedLansia.keluarga.nama_pendamping || "Tidak"}</p>
-                      </div>
                       <div>
                         <Label className="font-semibold">Hubungan dengan Lansia</Label>
                         <p className="text-sm text-gray-600">{selectedLansia.keluarga.hubungan_dengan_lansia || "-"}</p>
@@ -1122,6 +1136,7 @@ function DataTableContent() {
                         id="edit-nama"
                         value={editingLansia.nama_lengkap}
                         onChange={(e) => handleEditChange("nama_lengkap", e.target.value)}
+                        required
                       />
                     </div>
                     <div>
@@ -1130,6 +1145,7 @@ function DataTableContent() {
                         id="edit-nik"
                         value={editingLansia.nik}
                         onChange={(e) => handleEditChange("nik", e.target.value)}
+                        required
                       />
                     </div>
                     <div>
@@ -1137,6 +1153,7 @@ function DataTableContent() {
                       <Select
                         value={editingLansia.jenis_kelamin}
                         onValueChange={(value) => handleEditChange("jenis_kelamin", value)}
+                        required
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -1157,6 +1174,7 @@ function DataTableContent() {
                         type="date"
                         value={editingLansia.tanggal_lahir}
                         onChange={(e) => handleEditChange("tanggal_lahir", e.target.value)}
+                        required
                       />
                     </div>
                     <div className="col-span-2">
@@ -1174,6 +1192,7 @@ function DataTableContent() {
                         id="edit-address"
                         value={editingLansia.alamat_lengkap}
                         onChange={(e) => handleEditChange("alamat_lengkap", e.target.value)}
+                        required
                       />
                     </div>
                     <div>
@@ -1182,6 +1201,7 @@ function DataTableContent() {
                         id="edit-rt"
                         value={editingLansia.rt}
                         onChange={(e) => handleEditChange("rt", e.target.value)}
+                        required
                       />
                     </div>
                     <div>
@@ -1190,6 +1210,8 @@ function DataTableContent() {
                         id="edit-rw"
                         value={editingLansia.rw}
                         onChange={(e) => handleEditChange("rw", e.target.value)}
+                        readOnly={isAllowEditRW}
+                        required
                       />
                     </div>
                     <div>
@@ -1197,6 +1219,7 @@ function DataTableContent() {
                       <Select
                         value={editingLansia.status_perkawinan}
                         onValueChange={(value) => handleEditChange("status_perkawinan", value)}
+                        required
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -1212,7 +1235,7 @@ function DataTableContent() {
                     </div>
                     <div>
                       <Label htmlFor="edit-religion">Agama</Label>
-                      <Select value={editingLansia.agama} onValueChange={(value) => handleEditChange("agama", value)}>
+                      <Select value={editingLansia.agama} required onValueChange={(value) => handleEditChange("agama", value)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -1234,6 +1257,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-health-condition">Kondisi Kesehatan Umum</Label>
                       <Select
                         value={editingLansia.kesehatan?.kondisi_kesehatan_umum || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesehatan", "kondisi_kesehatan_umum", value)}
                       >
                         <SelectTrigger>
@@ -1252,6 +1276,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-nutrition">Status Gizi</Label>
                       <Select
                         value={editingLansia.kesehatan?.status_gizi || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesehatan", "status_gizi", value)}
                       >
                         <SelectTrigger>
@@ -1270,6 +1295,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-medication">Penggunaan Obat Rutin</Label>
                       <Select
                         value={editingLansia.kesehatan?.penggunaan_obat_rutin || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesehatan", "penggunaan_obat_rutin", value)}
                       >
                         <SelectTrigger>
@@ -1288,6 +1314,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-activity">Aktivitas Fisik</Label>
                       <Select
                         value={editingLansia.kesehatan?.aktivitas_fisik || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesehatan", "aktivitas_fisik", value)}
                       >
                         <SelectTrigger>
@@ -1383,6 +1410,26 @@ function DataTableContent() {
                         ))}
                       </div>
                     </div>
+                    
+                    <div>
+                      <Label htmlFor="edit-nutrition">Status BPJS</Label>
+                      <Select
+                        value={editingLansia.kesehatan?.bpjs || ""}
+                        required
+                        onValueChange={(value) => handleEditNestedChange("kesehatan", "bpjs", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih status BPJS" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {bpjsOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </TabsContent>
 
@@ -1392,6 +1439,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-family-support">Dukungan Keluarga</Label>
                       <Select
                         value={editingLansia.kesejahteraan?.dukungan_keluarga || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesejahteraan", "dukungan_keluarga", value)}
                       >
                         <SelectTrigger>
@@ -1410,6 +1458,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-house-condition">Kondisi Rumah</Label>
                       <Select
                         value={editingLansia.kesejahteraan?.kondisi_rumah || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesejahteraan", "kondisi_rumah", value)}
                       >
                         <SelectTrigger>
@@ -1428,6 +1477,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-psychology">Kondisi Psikologis</Label>
                       <Select
                         value={editingLansia.kesejahteraan?.kondisi_psikologis || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesejahteraan", "kondisi_psikologis", value)}
                       >
                         <SelectTrigger>
@@ -1446,6 +1496,7 @@ function DataTableContent() {
                       <Label htmlFor="edit-hobbies">Hobi & Minat</Label>
                       <Select
                         value={editingLansia.kesejahteraan?.hobi_minat || ""}
+                        required
                         onValueChange={(value) => handleEditNestedChange("kesejahteraan", "hobi_minat", value)}
                       >
                         <SelectTrigger>
@@ -1492,132 +1543,116 @@ function DataTableContent() {
                 </TabsContent>
 
                 <TabsContent value="family" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="edit-caregiver-name">Nama Pendamping</Label>
-                      <Input
-                        id="edit-caregiver-name"
-                        value={editingLansia.keluarga?.nama_pendamping || ""}
-                        onChange={(e) => handleEditNestedChange("keluarga", "nama_pendamping", e.target.value)}
+                  <div className="space-y-4">
+                    
+                    {/* Checkbox Memiliki Pendamping */}
+                    <div className="flex items-center space-x-2 p-4 bg-slate-50 rounded-md border">
+                      <Checkbox
+                        id="edit-memiliki-pendamping"
+                        checked={editingLansia.keluarga?.memiliki_pendamping || false}
+                        onCheckedChange={(checked) => handleEditNestedChange("keluarga", "memiliki_pendamping", checked)}
                       />
+                      <Label htmlFor="edit-memiliki-pendamping" className="cursor-pointer">
+                        Lansia Memiliki Pendamping / Keluarga yg Merawat?
+                      </Label>
                     </div>
-                    <div>
-                      <Label htmlFor="edit-relationship">Hubungan dengan Lansia</Label>
-                      <Select
-                        value={editingLansia.keluarga?.hubungan_dengan_lansia || ""}
-                        onValueChange={(value) => handleEditNestedChange("keluarga", "hubungan_dengan_lansia", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih hubungan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {hubunganOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-birth">Tanggal Lahir</Label>
-                      <Input
-                        id="edit-birth"
-                        type="date"
-                        value={editingLansia.keluarga?.tanggal_lahir_pendamping || editingLansia.tanggal_lahir}
-                        onChange={(e) => handleEditNestedChange("keluarga", "tanggal_lahir_pendamping", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-caregiver-education">Pendidikan Pendamping</Label>
-                      <Select
-                        value={editingLansia.keluarga?.pendidikan_pendamping || ""}
-                        onValueChange={(value) => handleEditNestedChange("keluarga", "pendidikan_pendamping", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih pendidikan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {pendidikanOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-availability">Ketersediaan Waktu</Label>
-                      <Select
-                        value={editingLansia.keluarga?.ketersediaan_waktu || ""}
-                        onValueChange={(value) => handleEditNestedChange("keluarga", "ketersediaan_waktu", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih ketersediaan waktu" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ketersediaanWaktuOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-bkl-participation">Partisipasi Program BKL</Label>
-                      <Select
-                        value={editingLansia.keluarga?.partisipasi_program_bkl || ""}
-                        onValueChange={(value) => handleEditNestedChange("keluarga", "partisipasi_program_bkl", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih partisipasi Porgram BKL" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {dataBKLOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-bkl-history">Riwayat Partisipasi BKL</Label>
-                      <Select
-                        value={editingLansia.keluarga?.riwayat_partisipasi_bkl || ""}
-                        onValueChange={(value) => handleEditNestedChange("keluarga", "riwayat_partisipasi_bkl", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih riwayat Porgram BKL" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {riwayatBKLOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-bkl-history">Keterlibatan Dana</Label>
-                      <Select
-                        value={editingLansia.keluarga?.keterlibatan_data || ""}
-                        onValueChange={(value) => handleEditNestedChange("keluarga", "keterlibatan_data", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih keterlibatan dana" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {keterlibatanDanaOptions.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+
+                    {/* Form Conditional jika memiliki pendamping */}
+                    {editingLansia.keluarga?.memiliki_pendamping && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="edit-relationship">Hubungan dengan Lansia</Label>
+                          <Select
+                            value={editingLansia.keluarga?.hubungan_dengan_lansia || ""}
+                            onValueChange={(value) => handleEditNestedChange("keluarga", "hubungan_dengan_lansia", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih hubungan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {hubunganOptions.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-availability">Ketersediaan Waktu</Label>
+                          <Select
+                            value={editingLansia.keluarga?.ketersediaan_waktu || ""}
+                            onValueChange={(value) => handleEditNestedChange("keluarga", "ketersediaan_waktu", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih ketersediaan waktu" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ketersediaanWaktuOptions.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-bkl-participation">Partisipasi Program BKL</Label>
+                          <Select
+                            value={editingLansia.keluarga?.partisipasi_program_bkl || ""}
+                            onValueChange={(value) => handleEditNestedChange("keluarga", "partisipasi_program_bkl", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Partisipasi Program BKL" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dataBKLOptions.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-dana-participation">Keterlibatan Dana</Label>
+                          <Select
+                            value={editingLansia.keluarga?.keterlibatan_data || ""}
+                            onValueChange={(value) => handleEditNestedChange("keluarga", "keterlibatan_data", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih keterlibatan dana" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {keterlibatanDanaOptions.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="edit-bkl-history">Riwayat Partisipasi BKL</Label>
+                          <Select
+                            value={editingLansia.keluarga?.riwayat_partisipasi_bkl || ""}
+                            onValueChange={(value) => handleEditNestedChange("keluarga", "riwayat_partisipasi_bkl", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih Riwayat Partisipasi BKL" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {riwayatBKLOptions.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </TabsContent>
 

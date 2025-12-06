@@ -9,7 +9,6 @@ import { hubunganOptions, ketersediaanWaktuOptions, dataBKLOptions, keterlibatan
 
 interface FamilyData {
   memiliki_pendamping: boolean
-  // Field dihapus: nama, tgl lahir, pendidikan
   hubungan_dengan_lansia: string
   ketersediaan_waktu: string
   partisipasi_program_bkl: string
@@ -77,12 +76,6 @@ const FamilyDataSection = React.memo(({ data, onChange }: FamilyDataSectionProps
                 </SelectContent>
                 </Select>
             </div>
-            </div>
-        )}
-
-        <div className="border-t pt-4 mt-2">
-            <Label className="mb-2 block text-gray-500 font-semibold">Informasi Program & Partisipasi</Label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <Label htmlFor="partisipasi_program_bkl">Partisipasi Program BKL</Label>
                 <Select value={data.partisipasi_program_bkl} onValueChange={(value) => onChange("partisipasi_program_bkl", value)}>
@@ -129,7 +122,8 @@ const FamilyDataSection = React.memo(({ data, onChange }: FamilyDataSectionProps
                 </Select>
             </div>
             </div>
-        </div>
+        )}
+
       </CardContent>
     </Card>
   )

@@ -14,6 +14,8 @@ import {
   aktivitasOptions,
   giziOptions,
   imunisasiOptions,
+  bpjsOptions,
+  riwayatBKLOptions
 } from "@/lib/options"
 
 interface HealthData {
@@ -61,18 +63,26 @@ const HealthDataSection = React.memo(({ data, onChange, onArrayChange }: HealthD
             </Select>
           </div>
           <div>
-            <Label htmlFor="bpjs">Nomor BPJS / KIS</Label>
-            <Input
-                id="bpjs"
-                value={data.bpjs || ""}
-                placeholder="Masukkan Nomor BPJS/KIS (Opsional)"
-                onChange={(e) => onChange("bpjs", e.target.value)}
-            />
+            <Label htmlFor="bpjs">Status BPJS</Label>
+            <Select
+              value={data.bpjs}
+              onValueChange={(value) => onChange("bpjs", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Status BPJS" />
+              </SelectTrigger>
+              <SelectContent>
+                {bpjsOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        {/* ... (Sisa kode sama seperti sebelumnya) ... */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             {/* ... Penggunaan Obat & Status Gizi ... */}
              <div>
                 <Label htmlFor="penggunaan_obat_rutin">Penggunaan Obat Rutin</Label>
                 <Select
@@ -107,7 +117,62 @@ const HealthDataSection = React.memo(({ data, onChange, onArrayChange }: HealthD
                 </Select>
               </div>
         </div>
-        {/* ... (Lanjutan kode: Aktivitas Fisik, Array Checkboxes dll) ... */}
+
+        <div>
+          <Label>Riwayat Penyakit Kronis</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+            {penyakitOptions.map((riwayat) => (
+              <div key={riwayat} className="flex items-center space-x-2">
+                <Checkbox
+                  id={riwayat}
+                  checked={data.riwayat_penyakit_kronis.includes(riwayat)}
+                  onCheckedChange={(checked) => onArrayChange("riwayat_penyakit_kronis", riwayat, checked as boolean)}
+                />
+                <Label htmlFor={riwayat} className="text-sm">
+                  {riwayat}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div>
+          <Label>Alat Bantu</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+            {alatBantuOptions.map((alat) => (
+              <div key={alat} className="flex items-center space-x-2">
+                <Checkbox
+                  id={alat}
+                  checked={data.alat_bantu.includes(alat)}
+                  onCheckedChange={(checked) => onArrayChange("alat_bantu", alat, checked as boolean)}
+                />
+                <Label htmlFor={alat} className="text-sm">
+                  {alat}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Label>Riwayat Imunisasi</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+            {imunisasiOptions.map((imunisasi) => (
+              <div key={imunisasi} className="flex items-center space-x-2">
+                <Checkbox
+                  id={imunisasi}
+                  checked={data.riwayat_imunisasi.includes(imunisasi)}
+                  onCheckedChange={(checked) => onArrayChange("riwayat_imunisasi", imunisasi, checked as boolean)}
+                />
+                <Label htmlFor={imunisasi} className="text-sm">
+                  {imunisasi}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+
         <div>
             <Label htmlFor="aktivitas_fisik">Aktivitas Fisik</Label>
             <Select value={data.aktivitas_fisik} onValueChange={(value) => onChange("aktivitas_fisik", value)}>
@@ -123,7 +188,7 @@ const HealthDataSection = React.memo(({ data, onChange, onArrayChange }: HealthD
               </SelectContent>
             </Select>
           </div>
-          {/* ... Riwayat Penyakit, Imunisasi, Alat Bantu (Sama) ... */}
+          
       </CardContent>
     </Card>
   )

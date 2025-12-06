@@ -75,6 +75,12 @@ const kesehatanOptions = [
 "Lemah Fisik",
 ];
 
+const bpjsOptions = [
+"Mandiri",
+"Penerima Bantuan Iuran (PBI)",
+"Tidak Punya",
+];
+
 const penyakitOptions = [
 "Hipertensi",
 "Diabetes",
@@ -253,4 +259,4 @@ export {genderOptions, perkawinanOptions, agamaOptions, pendidikanOptions,
         obatOptions, alatBantuOptions, aktivitasOptions, giziOptions, imunisasiOptions,
         dukunganOptions, rumahOptions, kebutuhanMendesakOptions, hobiOptions,
         psikologisOptions, dataBKLOptions, riwayatBKLOptions, keterlibatanDanaOptions,
-        adlOptions, adlGetOptions, hubunganOptions, ketersediaanWaktuOptions};
+        adlOptions, adlGetOptions, hubunganOptions, ketersediaanWaktuOptions, bpjsOptions};
