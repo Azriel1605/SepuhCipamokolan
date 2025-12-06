@@ -32,6 +32,7 @@ import {
   Users,
   Save,
   X,
+  Download
 } from "lucide-react"
 import { dataAPI } from "@/lib/api"
 import {genderOptions, perkawinanOptions, agamaOptions, kesehatanOptions, penyakitOptions,
@@ -374,6 +375,25 @@ function DataTableContent() {
     })
   }
 
+  const handleDownloadRecap = async () => {
+      try {
+        const response = await dataAPI.exportRecap()
+        if (response.ok) {
+          const blob = await response.blob()
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.style.display = "none"
+          a.href = url
+          a.download = `Rekap Data Lansia ${new Date().toISOString().slice(0, 10)}.xlsx`
+          document.body.appendChild(a)
+          a.click()
+          window.URL.revokeObjectURL(url)
+        }
+      } catch (error) {
+        console.error("Error downloading rekapan:", error)
+      }
+    }
+
   
 
   const handleEditArrayChange = (
@@ -454,7 +474,10 @@ function DataTableContent() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap justify-content-end gap-2">
-                  <DatePicker date={selectedDateDownload} onChange={(date: Date) => setSelectedDateDownload(date)} />
+                  <Button onClick={handleDownloadRecap} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Rekap Excel
+                  </Button>
             </div>
           </CardContent>
         </Card>

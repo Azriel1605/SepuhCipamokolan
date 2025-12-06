@@ -135,15 +135,18 @@ def login_required(f):
 
 @api.route('/note', methods=['GET', 'POST'])
 def note():
-    users = ["key"]
-    password = ["Ra_sy6a7e2"]
+    users = [ "rw1", "rw2", "rw3", "rw4", "rw5", "rw6", "rw7", "rw8", "rw9", "rw10", "rw11", "rw12"]
+    # users = ["kelurahan", "key"]
+    password = [ "PeltMfhq", "uBhYFsof", "eJsHihRy", "vmpvqmwz", "aFuRdOpC", "qNbXIdNs", "ngqcNhUE", "RQHkbifj", "AmiqmZvG", "LxvpZlxs", "VOAcANya", "tGjkizgQ"]
+    # password = ["evNDljmg", "Ra_sy6a7e2"]
     i = 0
     for u, p in zip(users, password):
         i+=1
         acc = User(
             username=u, 
             email=f'{u}@example.com',
-            role="kelurahan",
+            # role="kelurahan",
+            role=i,
             password_hash=bcrypt.generate_password_hash(p).decode('utf-8')
         )
         db.session.add(acc)
@@ -164,13 +167,12 @@ def rekapan():
         "Pendidikan Terakhir", "Pekerjaan Terakhir", "Sumber Penghasilan",
         # Data Kesehatan
         "Kondisi Kesehatan Umum", "Riwayat Penyakit Kronis", "Penggunaan Obat Rutin",
-        "Alat Bantu", "Aktivitas Fisik", "Status Gizi", "Riwayat Imunisasi",
+        "Alat Bantu", "Aktivitas Fisik", "Status Gizi", "Riwayat Imunisasi", "BPJS",
         # Data Kesejahteraan Sosial
         "Dukungan Keluarga", "Kondisi Rumah", "Kebutuhan Mendesak", "Hobi/Minat", "Kondisi Psikologis",
         # Data Keluarga Pendamping
-        "Nama Pendamping", "Hubungan Dengan Lansia", "Tanggal Lahir Pendamping",
-        "Usia Pendamping", "Pendidikan Pendamping", "Ketersediaan Waktu",
-        "Partisipasi Program BKL", "Riwayat Partisipasi BKL", "Keterlibatan Data",
+        "Memiliki Pendamping", "Hubungan Dengan Lansia", "Ketersediaan Waktu",
+        "Partisipasi Program BKL", "Riwayat Partisipasi BKL", "Keterlibatan Dana kelompok Lansia",
         # Data ADL (Activity of Daily Living)
         "BAB", "BAK", "Membersihkan Diri", "Toilet", "Makan", "Pindah Tempat",
         "Mobilitas", "Berpakaian", "Naik Turun Tangga", "Mandi", "Total Skor ADL", "Kategori ADL"
@@ -221,6 +223,7 @@ def rekapan():
             kesehatan.aktivitas_fisik if kesehatan else "",
             kesehatan.status_gizi if kesehatan else "",
             ", ".join(kesehatan.riwayat_imunisasi or []) if kesehatan and kesehatan.riwayat_imunisasi else "",
+            ", ".join(kesehatan.bpjs) if kesehatan and kesehatan.bpjs else "",
 
             # Kesejahteraan Sosial
             sosial.dukungan_keluarga if sosial else "",
@@ -230,11 +233,8 @@ def rekapan():
             sosial.kondisi_psikologis if sosial else "",
 
             # Keluarga Pendamping
-            pendamping.nama_pendamping if pendamping else "",
+            pendamping.memiliki_pendamping if pendamping else "",
             pendamping.hubungan_dengan_lansia if pendamping else "",
-            pendamping.tanggal_lahir_pendamping.strftime("%Y-%m-%d") if pendamping and pendamping.tanggal_lahir_pendamping else "",
-            pendamping.usia() if pendamping else "",
-            pendamping.pendidikan_pendamping if pendamping else "",
             pendamping.ketersediaan_waktu if pendamping else "",
             pendamping.partisipasi_program_bkl if pendamping else "",
             pendamping.riwayat_partisipasi_bkl if pendamping else "",
@@ -272,7 +272,7 @@ def rekapan():
         as_attachment=True,
         download_name=filename,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    ), 200
     
 
 @api.route('/generateuser', methods=['GET'])
@@ -992,6 +992,142 @@ def export_template():
         as_attachment=True,
         download_name='LansiaTemplate.zip',
         mimetype='application/vnd.ms-excel.sheet.macroEnabled.12'
+    ), 200
+    
+@api.route('/export-recap', methods=['GET'])
+@login_required
+def export_recap():
+    
+    user_role = session.get('role')
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Data Lansia"
+
+    # Header kolom (disesuaikan dengan model)
+    headers = [
+        # Data utama lansia
+        "ID", "Nama Lengkap", "NIK", "Jenis Kelamin", "Tanggal Lahir", "Usia", "Kelompok Usia",
+        "Alamat Lengkap", "RT", "RW", "Koordinat", "Status Perkawinan", "Agama",
+        "Pendidikan Terakhir", "Pekerjaan Terakhir", "Sumber Penghasilan",
+        # Data Kesehatan
+        "Kondisi Kesehatan Umum", "Riwayat Penyakit Kronis", "Penggunaan Obat Rutin",
+        "Alat Bantu", "Aktivitas Fisik", "Status Gizi", "Riwayat Imunisasi", "BPJS",
+        # Data Kesejahteraan Sosial
+        "Dukungan Keluarga", "Kondisi Rumah", "Kebutuhan Mendesak", "Hobi/Minat", "Kondisi Psikologis",
+        # Data Keluarga Pendamping
+        "Memiliki Pendamping", "Hubungan Dengan Lansia", "Ketersediaan Waktu",
+        "Partisipasi Program BKL", "Riwayat Partisipasi BKL", "Keterlibatan Dana kelompok Lansia",
+        # Data ADL (Activity of Daily Living)
+        "BAB", "BAK", "Membersihkan Diri", "Toilet", "Makan", "Pindah Tempat",
+        "Mobilitas", "Berpakaian", "Naik Turun Tangga", "Mandi", "Total Skor ADL", "Kategori ADL"
+    ]
+
+    ws.append(headers)
+    
+    id_query = db.session.query(Lansia.id)
+    
+    if user_role not in ['kelurahan', 'admin', 'superadmin']:
+        id_query = id_query.filter(Lansia.rw == user_role)
+    
+    filtered_ids = [row.id for row in id_query.all()]
+    
+    
+    lansia_list = db.session.query(Lansia)\
+        .outerjoin(KesehatanLansia, KesehatanLansia.lansia_id == Lansia.id)\
+        .outerjoin(KesejahteraanSosial, KesejahteraanSosial.lansia_id == Lansia.id)\
+        .outerjoin(KeluargaPendamping, KeluargaPendamping.lansia_id == Lansia.id)\
+        .outerjoin(ADailyLiving, ADailyLiving.lansia_id == Lansia.id)\
+        .filter(Lansia.id.in_(filtered_ids))\
+        .order_by(Lansia.id.asc())\
+        .all()
+        
+    
+    
+    # Isi baris data
+    for l in lansia_list:
+        usia = l.usia() if l.tanggal_lahir else "-"
+        kelompok = l.kelompokUsia if hasattr(l, "kelompokUsia") else "-"
+        pendamping = l.keluarga
+        kesehatan = l.kesehatan
+        sosial = l.kesejahteraan
+        adl = l.daily_living
+
+        row = [
+            l.id,
+            l.nama_lengkap,
+            l.nik,
+            l.jenis_kelamin,
+            l.tanggal_lahir.strftime("%Y-%m-%d") if l.tanggal_lahir else "",
+            usia,
+            kelompok,
+            l.alamat_lengkap,
+            l.rt,
+            l.rw,
+            l.koordinat,
+            l.status_perkawinan,
+            l.agama,
+            l.pendidikan_terakhir,
+            l.pekerjaan_terakhir,
+            l.sumber_penghasilan,
+
+            # KesehatanLansia
+            kesehatan.kondisi_kesehatan_umum if kesehatan else "",
+            ", ".join(kesehatan.riwayat_penyakit_kronis or []) if kesehatan and kesehatan.riwayat_penyakit_kronis else "",
+            kesehatan.penggunaan_obat_rutin if kesehatan else "",
+            ", ".join(kesehatan.alat_bantu or []) if kesehatan and kesehatan.alat_bantu else "",
+            kesehatan.aktivitas_fisik if kesehatan else "",
+            kesehatan.status_gizi if kesehatan else "",
+            ", ".join(kesehatan.riwayat_imunisasi or []) if kesehatan and kesehatan.riwayat_imunisasi else "",
+            kesehatan.bpjs if kesehatan else "",
+
+            # Kesejahteraan Sosial
+            sosial.dukungan_keluarga if sosial else "",
+            sosial.kondisi_rumah if sosial else "",
+            ", ".join(sosial.kebutuhan_mendesak or []) if sosial and sosial.kebutuhan_mendesak else "",
+            sosial.hobi_minat if sosial else "",
+            sosial.kondisi_psikologis if sosial else "",
+
+            # Keluarga Pendamping
+            pendamping.memiliki_pendamping if pendamping else "",
+            pendamping.hubungan_dengan_lansia if pendamping else "",
+            pendamping.ketersediaan_waktu if pendamping else "",
+            pendamping.partisipasi_program_bkl if pendamping else "",
+            pendamping.riwayat_partisipasi_bkl if pendamping else "",
+            pendamping.keterlibatan_dana if pendamping else "",
+
+            # Daily Living
+            adl.bab if adl else "",
+            adl.bak if adl else "",
+            adl.membersihkan_diri if adl else "",
+            adl.toilet if adl else "",
+            adl.makan if adl else "",
+            adl.pindah_tempat if adl else "",
+            adl.mobilitas if adl else "",
+            adl.berpakaian if adl else "",
+            adl.naik_turun_tangga if adl else "",
+            adl.mandi if adl else "",
+            adl.total if adl else "",
+            adl.calculateCategory() if adl else "",
+        ]
+
+        ws.append(row)
+
+    # Auto width kolom sederhana
+    for col in ws.columns:
+        max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
+        ws.column_dimensions[col[0].column_letter].width = min(max_length + 2, 40)
+
+    # Simpan ke memori
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f"Rekapan_Lansia_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     ), 200
 
 # Add upload Excel endpoint
