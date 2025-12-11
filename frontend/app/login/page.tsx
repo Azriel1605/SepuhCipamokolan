@@ -128,14 +128,6 @@ function LoginPageContent() {
               </Link>
             </div>
           </form>
-
-          <div className="mt-6 pt-6 border-t">
-            <div className="text-center text-sm text-gray-600">
-              <p>Demo Credentials:</p>
-              <p className="font-mono text-xs mt-1">Username: admin | Password: admin123</p>
-              <p className="font-mono text-xs">Username: kader01 | Password: kader123</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
