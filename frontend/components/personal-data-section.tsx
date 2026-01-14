@@ -132,7 +132,7 @@ const PersonalDataSection = React.memo(({ data, onChange }: PersonalDataSectionP
           </div>
           <div>
             <Label htmlFor="rw">RW</Label>
-            <Input id="rw" value={isAllowEditRW ? data.rw : user?.role} onChange={(e) => onChange("rw", e.target.value)} readOnly={!isAllowEditRW} required/> 
+            <Input id="rw" value={data.rw ?? ""} onChange={(e) => onChange("rw", e.target.value)} readOnly={!isAllowEditRW} required/> 
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
