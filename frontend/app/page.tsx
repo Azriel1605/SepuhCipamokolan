@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, Heart, Home, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/hooks/use-auth"
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export default function HomePage() {
+  const { user } = useAuth()
+
   useEffect(() => {
     console.log("API_BASE_URL:", API_BASE_URL);
     fetch(`${API_BASE_URL}/note`)
@@ -46,6 +49,9 @@ export default function HomePage() {
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
               Platform digital untuk pengelolaan data dan monitoring kesejahteraan lansia
             </p>
+            <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
+              {user ? `Selamat datang, ${user?.username}` : 'Selamat datang di Sistem Sepuh Cipamokolan'}
+            </h1>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
               <div className="rounded-md shadow">
                 <Link href="/dashboard">
