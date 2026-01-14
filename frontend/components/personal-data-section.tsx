@@ -1,6 +1,6 @@
 "use client"
 
-import React, { use } from "react"
+import React, { use, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,6 +42,14 @@ const PersonalDataSection = React.memo(({ data, onChange }: PersonalDataSectionP
   
   const { user } = useAuth()
   const isAllowEditRW = user?.role === "admin" || user?.role === "superadmin" || user?.role === "kelurahan"
+
+  useEffect(() => {
+    if (!isAllowEditRW && user?.role) {
+      onChange("rw", user.role);
+    }
+  }, [isAllowEditRW, user?.role]);
+
+
 
   return (
     <Card>

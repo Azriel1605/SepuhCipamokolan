@@ -26,12 +26,12 @@ def send_reset_email(user_email, url):
     """Send password reset email with a bright theme"""
     try:
         msg = Message(
-            subject='🔐 Password Reset Request - CipamokolanDataKu',
+            subject='🔐 Password Reset Request - Sepuh Cipamokolan',
             recipients=[user_email],
             html=f'''
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #e0f7fa 0%, #fffde7 100%); padding: 20px; border-radius: 15px;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #00796b; font-size: 2rem;">🏠 CipamokolanDataKu</h1>
+                    <h1 style="color: #00796b; font-size: 2rem;">Sepuh Cipamokolan</h1>
                     <h2 style="color: #388e3c;">Reset Your Password</h2>
                 </div>
                 
@@ -40,7 +40,7 @@ def send_reset_email(user_email, url):
                         Hello! 👋
                     </p>
                     <p style="color: #37474f; line-height: 1.6;">
-                        We received a request to reset your password for your CipamokolanDataKu account.
+                        We received a request to reset your password for your SepuhCipamokolan account.
                         If you made this request, click the button below to reset your password:
                     </p>
                     
@@ -68,7 +68,7 @@ def send_reset_email(user_email, url):
                 </div>
                 
                 <div style="text-align: center; color: #90a4ae; font-size: 0.8rem;">
-                    <p>This is an automated message from CipamokolanDataKu</p>
+                    <p>This is an automated message from Sepuh Cipamokolan</p>
                     <p>Please do not reply to this email</p>
                 </div>
             </div>
@@ -351,7 +351,7 @@ def forgot_password():
     expires_at = datetime.now() + timedelta(hours=1)
     
     # Use frontend URL
-    frontend_url = os.getenv("FRONTEND_URL"+"/api", "http://http://lansia.cipamokolan.id/api")
+    frontend_url = os.getenv("FRONTEND_URL")
     reset_link = f"{frontend_url}/forgot-password?token={token}"
     
     reset_token = PasswordResetToken(
@@ -369,7 +369,6 @@ def forgot_password():
     
     return jsonify({
         'message': 'Password reset token generated',
-        'token': token  # Remove this in production
     })
     
 @api.route('/reset-password', methods=['PUT'])
@@ -484,6 +483,7 @@ def create_lansia():
         existing = Lansia.query.filter_by(nik=str(data['nik'])).first()
         if existing:
             return jsonify({'message': f'Error: NIK {data["nik"]} sudah terdaftar'}), 400
+        
         
         # Create main lansia record
         lansia_data = {
@@ -1362,8 +1362,8 @@ def get_lansia_locations():
             
 
         result.append({
-            "latitude": float(lat),
-            "longitude": float(lon)
+            "latitude": float(lat) if lat else None,
+            "longitude": float(lon) if lon else None
         })
 
     return jsonify(result)

@@ -14,8 +14,11 @@ import WelfareDataSection from "@/components/welfare-data-section"
 import FamilyDataSection from "@/components/family-data-section"
 import ADLSection from "@/components/adl-section"
 import ExcelUploadSection from "@/components/excel-upload-section"
+import { useAuth } from "@/hooks/use-auth"
 
 function InputDataContent() {
+  const { user } = useAuth()
+
   const [formData, setFormData] = useState({
     // Personal Data (Lansia table)
     nama_lengkap: "",
@@ -93,6 +96,13 @@ function InputDataContent() {
     setMessage("")
 
     try {
+      const dataToSend = { ...formData}
+      const isAdmin = ["admin", "superadmin", "kelurahan"].includes(user?.role || "")
+
+      if (!isAdmin && user?.role) {
+        dataToSend.rw = user.role
+      }
+
       const response = await dataAPI.createLansia(formData)
       const data = await response.json()
       if (response.ok) {
