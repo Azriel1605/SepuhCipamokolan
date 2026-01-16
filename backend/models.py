@@ -35,7 +35,7 @@ class Lansia(db.Model):
     alamat_lengkap = db.Column(db.Text)
     koordinat = db.Column(db.String(50))
     rt = db.Column(db.String(10))
-    rw = db.Column(db.String(10))
+    rw = db.Column(db.String(10), nullable=False)
     status_perkawinan = db.Column(db.String(50))
     agama = db.Column(db.String(50))
     pendidikan_terakhir = db.Column(db.String(100))
