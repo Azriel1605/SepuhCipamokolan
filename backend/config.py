@@ -27,10 +27,10 @@ class Config:
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = 'keyapkeyop@gmail.com'         # Email kamu
-    MAIL_PASSWORD = 'nind plrl oikp rveu'          # App password dari Google
-    MAIL_DEFAULT_SENDER = 'keyapkeyop@gmail.com'
-    
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')         # Email kamu
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')          # App password dari Google
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+
     # CORS
     CORS_ORIGINS = [os.getenv("FRONTEND_URL")]
     CORS_SUPPORTS_CREDENTIALS = True
