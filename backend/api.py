@@ -479,6 +479,12 @@ def get_lansia():
 def create_lansia():
     data = request.get_json()
     try:
+        # --- TAMBAHKAN KODE INI ---
+        rw_input = data.get('rw')
+        if not rw_input or str(rw_input).strip() == "":
+            return jsonify({'message': 'Error: Data RW tidak boleh kosong'}), 400
+        # --------------------------
+
         # Check if NIK already exists
         existing = Lansia.query.filter_by(nik=str(data['nik'])).first()
         if existing:
@@ -675,6 +681,10 @@ def update_lansia(lansia_id):
         # Update Lansia Basic Info (Logic sama seperti sebelumnya, hanya copy field yg relevan)
         for key in ['nama_lengkap', 'nik', 'jenis_kelamin', 'alamat_lengkap', 'koordinat', 'rt', 'rw', 'status_perkawinan', 'agama', 'pendidikan_terakhir', 'pekerjaan_terakhir', 'sumber_penghasilan']:
             if key in data:
+                value = data[key]
+                if key == 'rw' and (not value or str(value).strip() == ""):
+                    return jsonify({'message': 'Error: Data RW tidak boleh kosong'}), 400
+                
                 setattr(lansia, key, data[key])
         
         if 'tanggal_lahir' in data and data['tanggal_lahir']:
