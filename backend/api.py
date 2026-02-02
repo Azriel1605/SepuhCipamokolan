@@ -505,7 +505,8 @@ def create_lansia():
             'agama': data.get('agama'),
             'pendidikan_terakhir': data.get('pendidikan_terakhir'),
             'pekerjaan_terakhir': data.get('pekerjaan_terakhir'),
-            'sumber_penghasilan': data.get('sumber_penghasilan')
+            'sumber_penghasilan': data.get('sumber_penghasilan'),
+            'created_by': session.get('user_id')
         }
         
         lansia = Lansia(**lansia_data)
@@ -1243,6 +1244,7 @@ def upload_excel():
                     if col_name != 'id' and col_name in data:
                         value = data[col_name]
                         setattr(lansia, col_name, value)
+                setattr(lansia, 'created_by', session.get('user_id'))
                 
                 db.session.add(lansia)
                 db.session.flush()  # Get lansia.id

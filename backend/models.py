@@ -42,12 +42,14 @@ class Lansia(db.Model):
     pendidikan_terakhir = db.Column(db.String(100))
     pekerjaan_terakhir = db.Column(db.String(100))
     sumber_penghasilan = db.Column(db.String(100))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     # Relationships
     kesehatan = db.relationship('KesehatanLansia', backref='lansia', uselist=False, cascade='all, delete-orphan')
     kesejahteraan = db.relationship('KesejahteraanSosial', backref='lansia', uselist=False, cascade='all, delete-orphan')
     keluarga = db.relationship('KeluargaPendamping', backref='lansia', uselist=False, cascade='all, delete-orphan')
     daily_living = db.relationship('ADailyLiving', backref='lansia', uselist=False, cascade='all, delete-orphan')
+    pembuat = db.relationship('User', backref='lansia_dibuat')
     
     def usia(self, reference=datetime.today().strftime('%Y-%m-%d')):
         try:
