@@ -3,6 +3,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime
 from sqlalchemy import String, func, extract, cast, Integer, case
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import validates
 
 db = SQLAlchemy()
 
@@ -90,6 +91,12 @@ class Lansia(db.Model):
                 (usia_expr >= 80, "Lansia Tua"),
                 else_='Tidak Diketahui'  # ← tambahkan ini
         )
+
+    @validates('rw')
+    def validate_rw(self, key, value):
+        if not value or (isinstance(value, str) and value.strip() == ""):
+            raise ValueError("Data RW tidak boleh kosong")
+        return value
     
 
 class KesehatanLansia(db.Model):

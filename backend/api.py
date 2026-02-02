@@ -1200,6 +1200,22 @@ def upload_excel():
                             print(f"Error processing row {index} kolom {d}: Data Kosong")  # Debug log
                 else:
                     for d, val in data.items():
+                        # Cek apakah NaN ATAU string kosong/spasi saja
+                        is_empty = pd.isna(val) or (isinstance(val, str) and val.strip() == "")
+                        
+                        if is_empty:
+                            if d == 'koordinat': continue
+                            
+                            # Validasi khusus: RW wajib diisi dan tidak boleh kosong/spasi
+                            if d == 'rw':
+                                error_count += 1
+                                errors.append(f'\nData {error_d.get(d, d)} Kolom {index}: RW Wajib diisi dan tidak boleh kosong')
+                                continue
+
+                            error_count += 1
+                            error_msg = f'\nData {error_d.get(d, d)} Kolom {index}: Data Kosong'
+                            errors.append(error_msg)
+                            print(f"Error processing row {index} kolom {d}: Data Kosong")
                         if pd.isna(val):
                             if d == 'koordinat': continue
                             error_count += 1
