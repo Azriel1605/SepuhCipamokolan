@@ -478,6 +478,7 @@ def get_lansia():
 @login_required
 def create_lansia():
     data = request.get_json()
+    if int(session.get('user_id')) == 1: return jsonify({'message': 'Kelurahan tidak bisa input data'}), 400
     try:
         # --- TAMBAHKAN KODE INI ---
         rw_input = data.get('rw')
@@ -1157,6 +1158,9 @@ def upload_excel():
     
     if file.filename == '':
         return jsonify({'message': 'No file selected'}), 400
+
+    if int(session.get('role')) == 1:
+        return jsonify({'message': 'Unauthorized: Admin tidak dapat mengunggah data'}), 403
     
     if not file.filename.lower().endswith(('.xlsx', '.xls', 'xlsm')):
         return jsonify({'message': 'Invalid file format. Please upload Excel file (.xlsx or .xls)'}), 400
